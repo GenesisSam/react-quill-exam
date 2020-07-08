@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Quill } from "react-quill";
+import Quill from "quill";
 import { createPortal } from "react-dom";
 import { v4 } from "uuid";
 

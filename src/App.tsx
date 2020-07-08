@@ -2,9 +2,11 @@ import * as React from "react";
 import Quill from "quill";
 import defer from "lodash/defer";
 import map from "lodash/map";
-import { FileCellBlot } from "./components/blots";
-
 import "quill/dist/quill.snow.css";
+
+import { FileCellBlot } from "./components/blots";
+import Toolbar from "./components/toolbar";
+import { brotliDecompress } from "zlib";
 
 Quill.register(
   {
@@ -40,7 +42,21 @@ export default class App extends React.Component<IProps, IState> {
             maxStack: 500,
             userOnly: true,
           },
-          // toolbar: [],
+          toolbar: {
+            container: "#toolbar",
+            handlers: {
+              addEmoji: this.addEmoji,
+            },
+          },
+          keyboard: {
+            bindings: {
+              bold: {
+                key: "B",
+                shortKey: true,
+                handler: this.handleBold,
+              },
+            },
+          },
         },
       });
       this.editor.on("editor-change", this.handleEditorChange);
@@ -71,6 +87,7 @@ export default class App extends React.Component<IProps, IState> {
             blot.renderPortal(blot.id)
           )}
         </div>
+        <Toolbar />
         <button onClick={this.handleAddFileCell}>Add Image</button>
       </>
     );
@@ -119,6 +136,20 @@ export default class App extends React.Component<IProps, IState> {
       /** Call pollFormat */
       editor.insertEmbed(range.index, type, data);
       // console.log(">>>>>", editor.getContents());
+    }
+  };
+
+  private readonly handleBold = (range: any) => {
+    console.log(">>>>>>> handle B");
+    this.editor?.formatText(range, "bold", true);
+  };
+
+  private readonly addEmoji = () => {
+    if (this.editor) {
+      const range = this.editor.getSelection(true);
+      this.editor.insertText(range.index, ":EMOJI:");
+      const next = range.index + ":EMOJI:".length;
+      this.editor.setSelection(next, 0);
     }
   };
 }
