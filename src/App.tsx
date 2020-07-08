@@ -1,5 +1,6 @@
 import * as React from "react";
-import QuillEditor, { Quill } from "react-quill";
+import Quill from "quill";
+// import QuillEditor, { Quill } from "react-quill";
 import defer from "lodash/defer";
 import map from "lodash/map";
 import { FileCellBlot } from "./components/blots";
@@ -25,29 +26,51 @@ export default class App extends React.Component<IProps, IState> {
     embedBlots: {},
     value: "",
   };
-  private readonly refEditor = React.createRef<QuillEditor>();
+  private editor: Quill | null = null;
+  private readonly refEditor = React.createRef<HTMLDivElement>();
 
   public componentDidMount() {
-    let blots: any[] = [];
-    const editor = this.refEditor.current?.getEditor();
-    if (editor) {
-      (editor.scroll as any).emitter.on("blot-mount", (blot: any) => {
-        blots.push(blot);
-        defer(() => {
-          if (blots.length > 0) {
-            this.onMount(...blots);
-            blots = [];
-          }
-        });
+    if (this.refEditor.current) {
+      this.editor = new Quill(this.refEditor.current, {
+        readOnly: false,
+        placeholder: "여기에 텍스트를 입력하세요",
+        formats: ["fileCell"],
+        modules: {
+          history: {
+            delay: 1000,
+            maxStack: 500,
+            userOnly: true,
+          },
+          // toolbar: [],
+        },
       });
-      (editor.scroll as any).emitter.on("blot-unmount", this.onUnMount);
+      const editor = this.editor;
+
+      let blots: any[] = [];
+      if (editor) {
+        (editor.scroll as any).emitter.on("blot-mount", (blot: any) => {
+          blots.push(blot);
+          defer(() => {
+            if (blots.length > 0) {
+              this.onMount(...blots);
+              blots = [];
+            }
+          });
+        });
+        (editor.scroll as any).emitter.on("blot-unmount", this.onUnMount);
+      }
     }
   }
 
   public render() {
     return (
       <>
-        <QuillEditor
+        <div ref={this.refEditor}>
+          {map(this.state.embedBlots, (blot: any) =>
+            blot.renderPortal(blot.id)
+          )}
+        </div>
+        {/* <QuillEditor
           ref={this.refEditor}
           readOnly={false}
           placeholder="여기에 텍스트를 입력하세요"
@@ -62,8 +85,8 @@ export default class App extends React.Component<IProps, IState> {
           }}
           value={this.state.value}
           onChange={this.handleChange}
-        ></QuillEditor>
-        {map(this.state.embedBlots, (blot: any) => blot.renderPortal(blot.id))}
+        /> */}
+
         <button onClick={this.handleAddFileCell}>Add Image</button>
       </>
     );
@@ -96,7 +119,7 @@ export default class App extends React.Component<IProps, IState> {
   };
 
   private readonly handleAddFileCell = () => {
-    const editor = this.refEditor.current?.getEditor();
+    const editor = this.editor;
     if (editor) {
       const range = editor.getSelection(true);
       const type = "fileCell";
