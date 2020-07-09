@@ -23,7 +23,7 @@ const FileCell = React.forwardRef<
     getData,
   }));
   if (!node.src) return null;
-  console.log(">>>>> render test", node);
+
   return <img width="100%" height="100%" src={node.src} alt="" />;
 });
 
@@ -32,6 +32,8 @@ export default class FileCellBlot extends BlockEmbed {
   static tagName = "figure";
   static className = "ql-custom";
   static ref = {};
+
+  private data = FileCellBlot.data;
 
   static create(value: any) {
     const id = v4();
@@ -54,14 +56,9 @@ export default class FileCellBlot extends BlockEmbed {
     return undefined;
   }
 
-  constructor(domNode: Element) {
-    super(domNode);
-    this.id = domNode.getAttribute(DATA_ID_KEY);
-    this.data = FileCellBlot.data;
-  }
-
   public attach() {
     super.attach();
+    this.id = this.domNode.getAttribute(DATA_ID_KEY);
     this.scroll.emitter.emit("blot-mount", this);
   }
 
@@ -74,12 +71,7 @@ export default class FileCellBlot extends BlockEmbed {
     const { options } = Quill.find(this.scroll.domNode.parentNode);
     const ref = FileCellBlot.refs[id];
     return createPortal(
-      <FileCell
-        ref={ref}
-        type={FileCellBlot.blotName}
-        node={this.data}
-        readOnly={options.readOnly}
-      />,
+      <FileCell ref={ref} type={FileCellBlot.blotName} node={this.data} readOnly={options.readOnly} />,
       this.domNode
     );
   }
