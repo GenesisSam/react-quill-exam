@@ -4,13 +4,14 @@ import defer from "lodash/defer";
 import map from "lodash/map";
 import "quill/dist/quill.snow.css";
 
-import { FileCellBlot, Bold } from "./components/blots";
+import { FileCellBlot, Bold, Italic } from "./components/blots";
 import Toolbar from "./components/toolbar";
 
 Quill.register(
   {
     "formats/fileCell": FileCellBlot,
     "formats/bold": Bold,
+    "formats/italic": Italic,
   },
   true
 );
@@ -149,10 +150,10 @@ export default class App extends React.Component<IProps, IState> {
       };
       /** Call pollFormat */
       editor.insertEmbed(range.index, type, data);
-      // console.log(">>>>>", editor.getContents());
     }
   };
 
+  // FOR EXAM
   private readonly handleBoldToolbar = () => {
     const selection = this.editor?.getSelection(true);
     const currentFormat = selection
