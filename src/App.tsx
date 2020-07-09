@@ -1,16 +1,16 @@
 import * as React from "react";
-import Quill from "quill";
+import Quill, { RangeStatic, StringMap } from "quill";
 import defer from "lodash/defer";
 import map from "lodash/map";
 import "quill/dist/quill.snow.css";
 
-import { FileCellBlot } from "./components/blots";
+import { FileCellBlot, Bold } from "./components/blots";
 import Toolbar from "./components/toolbar";
-import { brotliDecompress } from "zlib";
 
 Quill.register(
   {
     "formats/fileCell": FileCellBlot,
+    "formats/bold": Bold,
   },
   true
 );
@@ -35,7 +35,14 @@ export default class App extends React.Component<IProps, IState> {
       this.editor = new Quill(this.refEditor.current, {
         readOnly: false,
         placeholder: "여기에 텍스트를 입력하세요",
-        formats: ["fileCell"],
+        formats: [
+          "fileCell",
+          "bold",
+          "italic",
+          "codeBlock",
+          "inlineBlock",
+          "link",
+        ],
         modules: {
           history: {
             delay: 1000,
@@ -45,6 +52,7 @@ export default class App extends React.Component<IProps, IState> {
           toolbar: {
             container: "#toolbar",
             handlers: {
+              bold: this.handleBoldToolbar,
               addEmoji: this.addEmoji,
             },
           },
@@ -59,6 +67,12 @@ export default class App extends React.Component<IProps, IState> {
           },
         },
       });
+      // this.editor.setContents([
+      //   {
+      //     insert: "hello",
+      //     attributes: { bold: true },
+      //   },
+      // ] as any);
       this.editor.on("editor-change", this.handleEditorChange);
 
       const editor = this.editor;
@@ -139,9 +153,16 @@ export default class App extends React.Component<IProps, IState> {
     }
   };
 
-  private readonly handleBold = (range: any) => {
-    console.log(">>>>>>> handle B");
-    this.editor?.formatText(range, "bold", true);
+  private readonly handleBoldToolbar = () => {
+    const selection = this.editor?.getSelection(true);
+    const currentFormat = selection
+      ? this.editor?.getFormat(selection).bold
+      : false;
+    this.editor?.format("bold", !currentFormat, "user");
+  };
+
+  private readonly handleBold = (_range: RangeStatic, context: StringMap) => {
+    this.editor?.format("bold", !context.format["bold"], "user");
   };
 
   private readonly addEmoji = () => {
